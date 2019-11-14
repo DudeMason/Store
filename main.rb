@@ -17,6 +17,9 @@ class Item
   def list_quantity
     puts "#{@product}: $#{@price}, Qty:#{@stock}"
   end
+  def p_history
+    puts "#{@product}, Qty:#{@stock} = $#{@price * @stock}"
+  end
   def coupon
     @price
   end
@@ -37,8 +40,9 @@ def menu
   puts "1) Browse Store"
   puts "2) View Cart" #put remove item option and option to checkout
   puts "3) Checkout" #apply taxes and put a coupon option
-  puts "4) Admin"
-  puts "5) Exit"
+  puts "4) Purchase History"
+  puts "5) Admin"
+  puts "6) Exit Store"
   menu_get
 end
 
@@ -52,8 +56,10 @@ def menu_get
   when 3
     checkout
   when 4
-    administrator
+    purchase_history
   when 5
+    administrator
+  when 6
     exit
   else
     puts "**Invalid entry, please try again!**"
@@ -62,14 +68,7 @@ def menu_get
 end
 
 
-def admin
-  puts "What would you like to do?"
-  puts "1) Add store product"
-  puts "2) Remove store product"
-  puts "3) Fire Marc"
-  puts "4) Return to Menu"
-  admin_gets
-end
+
 
 def browse
   puts "----------------------------"
@@ -88,6 +87,10 @@ def browse_get
         quantity
     end}
   if @selection == "Menu"
+    menu
+  elsif @selection == "Back"
+    menu
+  elsif @selection == "1"
     menu
   else @selection != @store.each {|item| item.product}
     puts "------------------------------------"
@@ -123,31 +126,17 @@ def quantity
   end
 end
 
-def admin_gets
-  answer = gets.strip.to_i
-  case answer
-  when 1
-    add_store_product
-  when 2
-    remove_store_product
-  when 3
-    puts "-----------------------------------------"
-    puts "That is completely and utterly IMPOSSIBLE"
-    puts "You are crazy"
-    puts "-----------------------------------------"
-    admin
-  when 4
-    menu
-  end
-end
+
 
 def view_cart
+  puts "---------------------"
+  puts "--This is your cart--"
+  puts "---------------------"
   @cart.each {|item| print item.list_quantity}
   view_cart_gets
 end
 
 def view_cart_gets
-  puts "------------------------"
   puts "1) Remove Item"
   puts "2) Checkout"
   puts "3) Back to Menu"
@@ -221,6 +210,129 @@ def quantity_remove
   end
 end
 
+def checkout
+  @cart_total = 0
+	@cart.each { |product|
+	@cart_total += product.price * product.stock
+  @cart_total = @cart_total + (@cart_total * 0.06)}
+  puts "----------------------------------------"
+  puts "Your total is $#{@cart_total.round(2)} after tax!"
+  puts "----------------------------------------"
+  puts "1) Apply Coupon?"
+  puts "2) Pay"
+  puts "3) Back to Menu"
+  puts "4) Exit Store"
+checkout_gets
+end
+
+def checkout_gets
+  input = gets.strip.to_i
+  case input
+  when 1
+    coupon
+  when 2
+    make_history #pay
+  when 3
+    menu
+  when 4
+    exit
+  else
+    puts "------------------------------------"
+    puts "**Invalid entry, please try again!**"
+    puts "------------------------------------"
+    checkout_gets
+  end
+end
+
+def coupon
+  puts "Enter your coupon code:"
+  puts "(15% off for you, you handsome devil) ->56982<- "
+  code = gets.strip.to_i
+  if code == 56982
+    @cart_total = @cart_total - (@cart_total * 0.15)
+    puts "--------------------"
+    puts "**Coupon applied!!**"
+    puts "--------------------"
+    checkout
+  else
+    puts "----------------------------"
+    puts "**Sorry, that didn't work!**"
+    puts "----------------------------"
+    checkout
+  end
+end
+
+def make_history
+  puts "---------------------------------"
+  puts "--Thank you for your purchase!!--"
+  puts "---------------------------------"
+  @purchase_history = []
+  @cart.each {|item|
+  @purchase_history << item}
+  @cart.clear
+  menu
+end
+
+def purchase_history
+  if @purchase_history == nil
+    puts "----------------------------------"
+    puts "**You have no purchase history!!**"
+    puts "----------------------------------"
+    menu
+  else
+    puts "-----------------------------"
+    puts "This is your purchase history"
+    puts "-----------------------------"
+    @purchase_history.each {|item| print item.p_history}
+    history_total = 0
+    @purchase_history.each {|item|
+    history_total += item.price * item.stock
+    history_total = history_total + (history_total * 0.06)}
+    puts "Purchase Total after tax = $#{history_total.round(2)}"
+    menu
+  end
+end
+
+def administrator
+  puts "PASSWORD:"
+  password = gets.strip
+  if password == "Admin"
+    admin
+  else
+    puts "-------------------"
+    puts "***Invalid entry***"
+    puts "-------------------"
+    menu
+  end
+end
+
+def admin
+  puts "What would you like to do?"
+  puts "1) Add store product"
+  puts "2) Remove store product"
+  puts "3) Fire Marc"
+  puts "4) Return to Menu"
+  admin_gets
+end
+
+def admin_gets
+  answer = gets.strip.to_i
+  case answer
+  when 1
+    add_store_product
+  when 2
+    remove_store_product
+  when 3
+    puts "-----------------------------------------"
+    puts "That is completely and utterly IMPOSSIBLE"
+    puts "You are crazy"
+    puts "-----------------------------------------"
+    admin
+  when 4
+    menu
+  end
+end
+
 def add_store_product
   puts "----------------------------"
   @store.each {|product| print product.list_quantity}
@@ -268,66 +380,7 @@ def remove_store_product_gets
   end}
 end
 
-def checkout
-  @cart_total = 0
-	@cart.each { |product|
-		@cart_total += product.price * product.stock
-    @cart_total = @cart_total - (@cart_total * 0.06)
-	}
-  total
-end
-
-def total
-  puts "----------------------------------------"
-  puts "Your total is $#{@cart_total.round(2)} after tax!"
-  puts "----------------------------------------"
-  puts "1) Apply Coupon?"
-  puts "2) Pay"
-  puts "3) Back to Menu"
-  puts "4) Exit Store"
-checkout_gets
-end
-
-def checkout_gets
-  input = gets.strip.to_i
-  case input
-  when 1
-    puts "Enter your coupon code:"
-    puts "(15% off for you, you handsome devil) ->56982<- "
-    code = gets.strip.to_i
-    if code == 56982
-      @cart_total = @cart_total - (@cart_total * 0.15)
-      puts "--------------------"
-      puts "**Coupon applied!!**"
-      puts "--------------------"
-      total
-    else
-      puts "----------------------------"
-      puts "**Sorry, that didn't work!**"
-      puts "----------------------------"
-      checkout
-    end
-  when 2
-    make_history
-  when 3
-    menu
-  when 4
-    exit
-  else
-    puts "------------------------------------"
-    puts "**Invalid entry, please try again!**"
-    puts "------------------------------------"
-    checkout_gets
-  end
-end
-
-def make_history
-  @purchase_history []
-  @purchase_history << "***************************"
-  @purchase_history << @cart
-  @cart.clear
-  menu
-end
+menu
 
 def exit
   puts "----------------"
@@ -335,18 +388,3 @@ def exit
   puts "--COME AGAIN!---"
   puts "----------------"
 end
-
-def administrator
-  puts "PASSWORD:"
-  password = gets.strip
-  if password == "Admin"
-    admin
-  else
-    puts "-------------------"
-    puts "***Invalid entry***"
-    puts "-------------------"
-    menu
-  end
-end
-
-menu
