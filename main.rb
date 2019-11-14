@@ -11,6 +11,9 @@ class Item
   def takestock(number)
     @stock -= number
   end
+  def takemoney(number)
+    @price -= number
+  end
   def list
     puts "#{@product}: $#{@price}"
   end
@@ -31,6 +34,7 @@ end
 @store << cereal = Item.new("Cereal", 3, 12)
 @store << bread = Item.new("Bread", 4, 14)
 @store << fruit = Item.new("Fruit", 1, 20)
+@customer = Item.new("Customer", 200, 1)
 
 @cart = []
 
@@ -38,11 +42,13 @@ def menu
   puts "-----------------------------------"
   puts "Welcome! How can we help you today?"
   puts "1) Browse Store"
-  puts "2) View Cart" #put remove item option and option to checkout
-  puts "3) Checkout" #apply taxes and put a coupon option
+  puts "2) View Cart"
+  puts "3) Checkout"
   puts "4) Purchase History"
   puts "5) Admin"
   puts "6) Exit Store"
+  puts "Your Balance: $#{@customer.price}"
+  puts "---------------------------"
   menu_get
 end
 
@@ -71,9 +77,9 @@ end
 
 
 def browse
-  puts "----------------------------"
+  puts "---------------------------"
   @store.each {|product| print product.list}
-  puts "----------------------------"
+  puts "---------------------------"
   browse_get
 end
 
@@ -91,6 +97,8 @@ def browse_get
   elsif @selection == "Back"
     menu
   elsif @selection == "1"
+    menu
+  elsif @selection == "Return"
     menu
   else @selection != @store.each {|item| item.product}
     puts "------------------------------------"
@@ -114,8 +122,15 @@ def quantity
     puts "------------------------------------"
     quantity
   elsif amount > @selection.stock
-    puts "*Our current stock is #{@selection.stock}*"
+    puts "-------------------------------"
+    puts "**Our current stock is #{@selection.stock}**"
+    puts "-------------------------------"
     quantity
+  elsif amount * @selection.price > @customer.price
+    puts "-------------------------------------"
+    puts "You don't have enough money for that!"
+    puts "-------------------------------------"
+    browse_get
   else
     @selection.takestock(amount)
     @cart << Item.new(@selection.product, @selection.price, amount)
@@ -129,10 +144,11 @@ end
 
 
 def view_cart
-  puts "---------------------"
+  puts " "
   puts "--This is your cart--"
   puts "---------------------"
   @cart.each {|item| print item.list_quantity}
+  puts "---------------------"
   view_cart_gets
 end
 
@@ -263,6 +279,7 @@ def coupon
 end
 
 def make_history
+  @customer.takemoney(@cart_total.round(2))
   puts "---------------------------------"
   puts "--Thank you for your purchase!!--"
   puts "---------------------------------"
