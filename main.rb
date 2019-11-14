@@ -61,18 +61,6 @@ def menu_get
   end
 end
 
-def administrator
-  puts "PASSWORD:"
-  password = gets.strip
-  if password == "Admin"
-    admin
-  else
-    puts "-------------------"
-    puts "***Invalid entry***"
-    puts "-------------------"
-    menu
-  end
-end
 
 def admin
   puts "What would you like to do?"
@@ -294,8 +282,9 @@ def total
   puts "Your total is $#{@cart_total.round(2)} after tax!"
   puts "----------------------------------------"
   puts "1) Apply Coupon?"
-  puts "2) Pay and Exit"
+  puts "2) Pay"
   puts "3) Back to Menu"
+  puts "4) Exit Store"
 checkout_gets
 end
 
@@ -319,21 +308,45 @@ def checkout_gets
       checkout
     end
   when 2
-    exit
+    make_history
   when 3
     menu
+  when 4
+    exit
   else
     puts "------------------------------------"
     puts "**Invalid entry, please try again!**"
     puts "------------------------------------"
     checkout_gets
+  end
+end
+
+def make_history
+  @purchase_history []
+  @purchase_history << "***************************"
+  @purchase_history << @cart
+  @cart.clear
+  menu
 end
 
 def exit
+  puts "----------------"
   puts "--- GOODBYE! ---"
-end
+  puts "--COME AGAIN!---"
+  puts "----------------"
 end
 
-
+def administrator
+  puts "PASSWORD:"
+  password = gets.strip
+  if password == "Admin"
+    admin
+  else
+    puts "-------------------"
+    puts "***Invalid entry***"
+    puts "-------------------"
+    menu
+  end
+end
 
 menu
