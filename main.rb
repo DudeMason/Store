@@ -26,6 +26,9 @@ class Item
   def coupon
     @price
   end
+  def add(number)
+    @stock += number
+  end
 end
 
 @store = []
@@ -47,8 +50,12 @@ def menu
   puts "4) Purchase History"
   puts "5) Admin"
   puts "6) Exit Store"
-  puts "Your Balance: $#{@customer.price}"
-  puts "---------------------------"
+  puts "Your Balance: $#{@customer.price.round(2)}"
+  @cart_total = 0
+  @cart.each {|item|
+  @cart_total += item.price * item.stock}
+  puts "Cart Total: $#{@cart_total.round(2)}"
+  puts " "
   menu_get
 end
 
@@ -72,9 +79,6 @@ def menu_get
     menu_get
   end
 end
-
-
-
 
 def browse
   puts "---------------------------"
@@ -100,6 +104,8 @@ def browse_get
     menu
   elsif @selection == "Return"
     menu
+  elsif @selection == "Store"
+    browse
   else @selection != @store.each {|item| item.product}
     puts "------------------------------------"
     puts "**Invalid entry, please try again!**"
@@ -109,42 +115,92 @@ def browse_get
 end
 
 def quantity
+  puts " "
   puts "How many do you want?"
-  amount = gets.strip.to_i
+  amount = gets.strip
+  @cart.each {|item|
+    if @selection.product == item.product
+      if @selection.stock == 0
+        puts "---------------------------------------"
+        puts "**Sorry, we are all out of that item!**"
+        puts "---------------------------------------"
+        browse_get
+      elsif amount.capitalize == "None"
+        puts "------------------"
+        puts "**None selected!**"
+        puts "------------------"
+        browse_get
+      elsif amount == "0"
+        puts "------------------"
+        puts "**None selected!**"
+        puts "------------------"
+        browse_get
+      elsif amount.to_i == 0
+        puts "------------------------------------"
+        puts "**Invalid entry, please try again!**"
+        puts "------------------------------------"
+        quantity
+      elsif amount.to_i > @selection.stock
+        puts "-------------------------------"
+        puts "**Our current stock is #{@selection.stock}**"
+        puts "-------------------------------"
+        quantity
+      else item.stock += amount.to_i
+        puts "------------------------------------------"
+        puts "#{@selection.product} has been added to cart!"
+        puts "------------------------------------------"
+        browse_get
+      end
+    end}
   if @selection.stock == 0
     puts "---------------------------------------"
     puts "**Sorry, we are all out of that item!**"
     puts "---------------------------------------"
     browse_get
-  elsif amount == 0
+  elsif amount.capitalize == "None"
+    puts "------------------"
+    puts "**None selected!**"
+    puts "------------------"
+    browse_get
+  elsif amount == "0"
+    puts "------------------"
+    puts "**None selected!**"
+    puts "------------------"
+    browse_get
+  elsif amount.to_i == 0
     puts "------------------------------------"
     puts "**Invalid entry, please try again!**"
     puts "------------------------------------"
     quantity
-  elsif amount > @selection.stock
+  elsif amount.to_i > @selection.stock
     puts "-------------------------------"
     puts "**Our current stock is #{@selection.stock}**"
     puts "-------------------------------"
     quantity
-  elsif amount * @selection.price > @customer.price
-    puts "-------------------------------------"
-    puts "You don't have enough money for that!"
-    puts "-------------------------------------"
-    browse_get
-  else
-    @selection.takestock(amount)
-    @cart << Item.new(@selection.product, @selection.price, amount)
+  elsif amount.to_i < @selection.stock
+    @selection.takestock(amount.to_i)
+    @cart << Item.new(@selection.product, @selection.price, amount.to_i)
     puts "------------------------------------------"
     puts "#{@selection.product} has been added to cart!"
     puts "------------------------------------------"
     browse_get
+  elsif amount.to_i == @selection.stock
+    @selection.takestock(amount.to_i)
+    @cart << Item.new(@selection.product, @selection.price, amount.to_i)
+    puts "------------------------------------------"
+    puts "#{@selection.product} has been added to cart!"
+    puts "------------------------------------------"
+    browse_get
+  else
+    puts "--------------------------------"
+    puts "**Sorry, something went wrong!**"
+    puts "--------------------------------"
+    browse
   end
 end
 
-
-
 def view_cart
-  puts " "
+  puts "---------------------"
   puts "--This is your cart--"
   puts "---------------------"
   @cart.each {|item| print item.list_quantity}
@@ -214,30 +270,37 @@ def quantity_remove
     quantity_remove
   elsif
     amount < @choice.stock
-    @choice.takestock(amount)
+    @cart.each {|item|
+    if @choice == item
+      item.takestock(amount)
+    end}
+    @store.each {|item|
+    if @choice.product == item.product
+      item.stock += amount
+    end}
     puts "----------"
     puts "*Success!*"
-    puts "----------"
     view_cart
   elsif
     @choice.stock == amount
     @cart.delete(@choice)
-    view_cart
+    @store.each {|item|
+    if @choice.product == item.product
+      item.stock += amount
+    end}
   end
 end
 
 def checkout
-  @cart_total = 0
-	@cart.each { |product|
-	@cart_total += product.price * product.stock
-  @cart_total = @cart_total + (@cart_total * 0.06)}
+  @cart_total = @cart_total + (@cart_total * 0.06)
   puts "----------------------------------------"
   puts "Your total is $#{@cart_total.round(2)} after tax!"
   puts "----------------------------------------"
-  puts "1) Apply Coupon?"
-  puts "2) Pay"
-  puts "3) Back to Menu"
-  puts "4) Exit Store"
+  puts "1) Pay"
+  puts "2) Apply Coupon"
+  puts "3) View Cart"
+  puts "4) Back to Menu"
+  puts "5) Exit Store"
 checkout_gets
 end
 
@@ -245,12 +308,14 @@ def checkout_gets
   input = gets.strip.to_i
   case input
   when 1
-    coupon
+    make_history
   when 2
-    make_history #pay
+    coupon #pay
   when 3
-    menu
+    view_cart
   when 4
+    menu
+  when 5
     exit
   else
     puts "------------------------------------"
@@ -265,11 +330,10 @@ def coupon
   puts "(15% off for you, you handsome devil) ->56982<- "
   code = gets.strip.to_i
   if code == 56982
-    @cart_total = @cart_total - (@cart_total * 0.15)
+    @new_cart_total = @cart_total - (@cart_total * 0.15)
     puts "--------------------"
     puts "**Coupon applied!!**"
-    puts "--------------------"
-    checkout
+    new_checkout
   else
     puts "----------------------------"
     puts "**Sorry, that didn't work!**"
@@ -279,15 +343,20 @@ def coupon
 end
 
 def make_history
-  @customer.takemoney(@cart_total.round(2))
-  puts "---------------------------------"
-  puts "--Thank you for your purchase!!--"
-  puts "---------------------------------"
-  @purchase_history = []
-  @cart.each {|item|
-  @purchase_history << item}
-  @cart.clear
-  menu
+  if @cart_total.round(2) > @customer.price
+    puts "----------------------------------"
+    puts "***You don't have enough money!***"
+    checkout
+  else
+    @customer.takemoney(@cart_total.round(2))
+    puts "---------------------------------"
+    puts "--Thank you for your purchase!!--"
+    @purchase_history = []
+    @cart.each {|item|
+    @purchase_history << item}
+    @cart.clear
+    menu
+  end
 end
 
 def purchase_history
@@ -303,9 +372,57 @@ def purchase_history
     @purchase_history.each {|item| print item.p_history}
     history_total = 0
     @purchase_history.each {|item|
-    history_total += item.price * item.stock
-    history_total = history_total + (history_total * 0.06)}
+    history_total += item.price * item.stock}
+    history_total = history_total + (history_total * 0.06)
     puts "Purchase Total after tax = $#{history_total.round(2)}"
+    menu
+  end
+end
+
+def new_checkout
+  puts "----------------------------------------"
+  puts "Your new total is $#{@new_cart_total.round(2)}!"
+  puts "----------------------------------------"
+  puts "1) Pay"
+  puts "2) View Cart"
+  puts "3) Back to Menu"
+  puts "4) Exit Store"
+new_checkout_gets
+end
+
+def new_checkout_gets
+  input = gets.strip.to_i
+  case input
+  when 1
+    new_make_history #pay
+  when 2
+    view_cart
+  when 3
+    menu
+  when 4
+    exit
+  else
+    puts "------------------------------------"
+    puts "**Invalid entry, please try again!**"
+    puts "------------------------------------"
+    new_checkout_gets
+  end
+end
+
+def new_make_history
+  if @new_cart_total.round(2) > @customer.price
+    puts "----------------------------------"
+    puts "***You don't have enough money!***"
+    new_checkout
+  else
+    @customer.takemoney(@new_cart_total.round(2))
+    puts "---------------------------------"
+    puts "-----You saved $#{(@cart_total * 0.15).round(2)}!-----"
+    puts "--Thank you for your purchase!!--"
+    @purchase_history = []
+    @cart.each {|item|
+    @purchase_history << item}
+    @cart.clear
     menu
   end
 end
