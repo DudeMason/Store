@@ -40,6 +40,7 @@ end
 @customer = Item.new("Customer", 200, 1)
 
 @cart = []
+@purchase_history = []
 
 def menu
   puts "-----------------------------------"
@@ -351,7 +352,6 @@ def make_history
     @customer.takemoney(@cart_total.round(2))
     puts "---------------------------------"
     puts "--Thank you for your purchase!!--"
-    @purchase_history = []
     @cart.each {|item|
     @purchase_history << item}
     @cart.clear
@@ -419,7 +419,6 @@ def new_make_history
     puts "---------------------------------"
     puts "-----You saved $#{(@cart_total * 0.15).round(2)}!-----"
     puts "--Thank you for your purchase!!--"
-    @purchase_history = []
     @cart.each {|item|
       item.price = item.price - (item.price * 0.15)}
     @cart.each {|item|
