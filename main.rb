@@ -421,7 +421,9 @@ def new_make_history
     puts "--Thank you for your purchase!!--"
     @purchase_history = []
     @cart.each {|item|
-    @purchase_history << item}
+      item.price = item.price - (item.price * 0.15)}
+    @cart.each {|item|
+      @purchase_history << item}
     @cart.clear
     menu
   end
