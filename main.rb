@@ -515,11 +515,11 @@ def remove_store_product_gets
   end}
 end
 
-menu
-
 def exit
   puts "----------------"
   puts "--- GOODBYE! ---"
   puts "--COME AGAIN!---"
   puts "----------------"
 end
+
+menu
